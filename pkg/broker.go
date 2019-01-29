@@ -2,9 +2,9 @@ package rabbitmq
 
 import (
 	"errors"
+	"fmt"
 	"github.com/gogo/protobuf/proto"
 	"github.com/streadway/amqp"
-	"log"
 	"os"
 	"os/signal"
 	"reflect"
@@ -58,15 +58,15 @@ type PublishOpts struct {
 	Opts Opts
 }
 
-func NewBroker(address string) (b *Broker) {
+func NewBroker(address string) (b *Broker, err error) {
 	b = &Broker{address: address}
 	b.init()
 
 	rmq := b.newRabbitMq()
-	err := rmq.connect()
+	err = rmq.connect()
 
 	if err != nil {
-		log.Fatalf("[*] RabbitMq connection failed with error: %s", err)
+		return b, fmt.Errorf("[*] RabbitMq connection failed with error: %s", err)
 	}
 
 	b.rabbitMQ = rmq
@@ -100,7 +100,7 @@ func (b *Broker) init() {
 
 func (b *Broker) RegisterSubscriber(topic string, fn interface{}) error {
 	if b.subscriber == nil {
-		b.subscriber = b.initSubscriber(topic, b.rabbitMQ)
+		b.subscriber = b.initSubscriber(topic)
 	}
 
 	typ := reflect.TypeOf(fn)
@@ -124,7 +124,7 @@ func (b *Broker) RegisterSubscriber(topic string, fn interface{}) error {
 	}
 
 	if typ.In(1).Kind() != reflect.Struct {
-		return errors.New("second argument of handler func must have a amqp.Table type")
+		return errors.New("second argument of handler func must have a amqp.Delivery type")
 	}
 
 	reqType := typ.In(0)
@@ -159,7 +159,7 @@ func (b *Broker) RegisterSubscriber(topic string, fn interface{}) error {
 	return nil
 }
 
-func (b *Broker) Subscribe() (err error) {
+func (b *Broker) Subscribe(exit chan bool) (err error) {
 	err = b.subscriber.Subscribe()
 
 	ch := make(chan os.Signal, 1)
@@ -168,18 +168,24 @@ func (b *Broker) Subscribe() (err error) {
 	select {
 	// wait on kill signal
 	case <-ch:
+	case <-exit:
 	}
 
 	return
 }
 
-func (b *Broker) Publish(topic string, msg proto.Message) (err error) {
+func (b *Broker) Publish(topic string, msg proto.Message, h amqp.Table) (err error) {
 	if b.publisher == nil {
 		b.publisher = b.newPublisher(topic)
 	}
 
+	if h == nil {
+		h = make(amqp.Table)
+	}
+
 	m := amqp.Publishing{
 		ContentType: defaultContentType,
+		Headers: h,
 	}
 
 	m.Body, err = proto.Marshal(msg)

@@ -40,10 +40,10 @@ type subscriber struct {
 	ext map[string]bool
 }
 
-func (b *Broker) initSubscriber(topic string, rmq *rabbitMq) (subs *subscriber) {
+func (b *Broker) initSubscriber(topic string) (subs *subscriber) {
 	subs = &subscriber{
 		topic:    topic,
-		rabbit:   rmq,
+		rabbit:   b.rabbitMQ,
 		handlers: []*handler{},
 		ext:      make(map[string]bool),
 	}
