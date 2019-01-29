@@ -16,7 +16,7 @@ import (
 	"github.com/streadway/amqp"
 	"log"
 	"math/rand"
-	"rabbitmq/pkg"
+	"github.com/ProtocolONE/rabbitmq/pkg"
 )
 
 type st struct {
