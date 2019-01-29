@@ -1,6 +1,8 @@
 RabbitMQ publisher/subscriber implementation 
 =============
 
+[![Build Status](https://travis-ci.org/ProtocolONE/rabbitmq.svg?branch=master)](https://travis-ci.org/ProtocolONE/rabbitmq) [![codecov](https://codecov.io/gh/ProtocolONE/rabbitmq/branch/master/graph/badge.svg)](https://codecov.io/gh/ProtocolONE/rabbitmq)
+
 ## Installation 
 
 `go get github.com/ProtocolONE/rabbitmq`
