@@ -1,7 +1,7 @@
 RabbitMQ publisher/subscriber implementation 
 =============
 
-## Installation
+## Installation 
 
 `go get github.com/ProtocolONE/rabbitmq`
 
