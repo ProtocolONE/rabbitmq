@@ -1,4 +1,4 @@
-module rabbitmq
+module github.com/ProtocolONE/rabbitmq
 
 require (
 	github.com/ProtocolONE/payone-repository v1.0.82 // indirect
