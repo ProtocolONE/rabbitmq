@@ -13,9 +13,6 @@ import (
 )
 
 type BrokerInterface interface {
-	newRabbitMq() *rabbitMq
-	init()
-
 	RegisterSubscriber(string, interface{}) error
 	Subscribe(chan bool) error
 	Publish(string, proto.Message, amqp.Table) error
