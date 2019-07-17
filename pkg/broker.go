@@ -12,15 +12,6 @@ import (
 	"syscall"
 )
 
-type BrokerInterface interface {
-	newRabbitMq() *rabbitMq
-	init()
-
-	RegisterSubscriber(string, interface{}) error
-	Subscribe(chan bool) error
-	Publish(string, proto.Message, amqp.Table) error
-}
-
 type Broker struct {
 	address  string
 	rabbitMQ *rabbitMq
@@ -67,7 +58,7 @@ type PublishOpts struct {
 	Opts Opts
 }
 
-func NewBroker(address string) (BrokerInterface, error) {
+func NewBroker(address string) (*Broker, error) {
 	b := &Broker{address: address}
 	b.init()
 

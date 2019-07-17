@@ -9,11 +9,8 @@ import (
 func TestSubscriber_Subscribe_Connection_Error(t *testing.T) {
 	b, _ := NewBroker(defaultAmqpUrl)
 
-	broker, ok := b.(*Broker)
-	assert.True(t, ok)
-
 	topic := "test.subscriber"
-	sub := broker.initSubscriber(topic)
+	sub := b.initSubscriber(topic)
 
 	err := sub.rabbit.conn.Close()
 	assert.Nil(t, err)
@@ -27,12 +24,8 @@ func TestSubscriber_Subscribe_Connection_Error(t *testing.T) {
 
 func TestSubscriber_Subscribe_Channel_Error(t *testing.T) {
 	b, _ := NewBroker(defaultAmqpUrl)
-
-	broker, ok := b.(*Broker)
-	assert.True(t, ok)
-
 	topic := "test.subscriber"
-	sub := broker.initSubscriber(topic)
+	sub := b.initSubscriber(topic)
 
 	err := sub.rabbit.channel.Close()
 	assert.Nil(t, err)
@@ -47,87 +40,75 @@ func TestSubscriber_Subscribe_Channel_Error(t *testing.T) {
 func TestSubscriber_DeclareExchange_Error(t *testing.T) {
 	b, _ := NewBroker(defaultAmqpUrl)
 
-	broker, ok := b.(*Broker)
-	assert.True(t, ok)
-
-	broker.Opts.ExchangeOpts.Opts = Opts{OptAutoDelete: true}
-	broker.Opts.QueueOpts.Opts = Opts{OptAutoDelete: true}
+	b.Opts.ExchangeOpts.Opts = Opts{OptAutoDelete: true}
+	b.Opts.QueueOpts.Opts = Opts{OptAutoDelete: true}
 
 	topic := "test"
-	broker.subscriber = broker.initSubscriber(topic)
+	b.subscriber = b.initSubscriber(topic)
 
-	_, err := broker.subscriber.consume()
+	_, err := b.subscriber.consume()
 
 	assert.Nil(t, err)
-	broker.subscriber.opts.ExchangeOpts.Opts = Opts{OptAutoDelete: false}
+	b.subscriber.opts.ExchangeOpts.Opts = Opts{OptAutoDelete: false}
 
-	_, err = broker.subscriber.consume()
+	_, err = b.subscriber.consume()
 	assert.NotNil(t, err)
 }
 
 func TestSubscriber_DeclareQueue_Error(t *testing.T) {
 	b, _ := NewBroker(defaultAmqpUrl)
 
-	broker, ok := b.(*Broker)
-	assert.True(t, ok)
-
-	broker.Opts.ExchangeOpts.Opts = Opts{OptAutoDelete: true}
-	broker.Opts.QueueOpts.Opts = Opts{OptAutoDelete: true}
+	b.Opts.ExchangeOpts.Opts = Opts{OptAutoDelete: true}
+	b.Opts.QueueOpts.Opts = Opts{OptAutoDelete: true}
 
 	topic := "test"
-	broker.subscriber = broker.initSubscriber(topic)
+	b.subscriber = b.initSubscriber(topic)
 
-	_, err := broker.subscriber.consume()
+	_, err := b.subscriber.consume()
 
 	assert.Nil(t, err)
-	broker.subscriber.opts.QueueOpts.Opts = Opts{OptAutoDelete: false}
+	b.subscriber.opts.QueueOpts.Opts = Opts{OptAutoDelete: false}
 
-	_, err = broker.subscriber.consume()
+	_, err = b.subscriber.consume()
 	assert.NotNil(t, err)
 }
 
 func TestSubscriber_QueueBind_Error(t *testing.T) {
 	b, _ := NewBroker(defaultAmqpUrl)
 
-	broker, ok := b.(*Broker)
-	assert.True(t, ok)
-
-	broker.Opts.ExchangeOpts.Opts = Opts{OptAutoDelete: true}
-	broker.Opts.QueueOpts.Opts = Opts{OptAutoDelete: true}
+	b.Opts.ExchangeOpts.Opts = Opts{OptAutoDelete: true}
+	b.Opts.QueueOpts.Opts = Opts{OptAutoDelete: true}
 
 	topic := "test"
-	broker.subscriber = broker.initSubscriber(topic)
+	b.subscriber = b.initSubscriber(topic)
 
-	_, err := broker.subscriber.consume()
-
-	assert.Nil(t, err)
+	_, err := b.subscriber.consume()
 
 	assert.Nil(t, err)
-	broker.Opts.QueueBindOpts.Args = amqp.Table{"test": int(3)}
 
-	_, err = broker.subscriber.consume()
+	assert.Nil(t, err)
+	b.Opts.QueueBindOpts.Args = amqp.Table{"test": int(3)}
+
+	_, err = b.subscriber.consume()
 	assert.NotNil(t, err)
 }
 
 func TestSubscriber_Consume_Error(t *testing.T) {
 	b, _ := NewBroker(defaultAmqpUrl)
 
-	broker, ok := b.(*Broker)
-	assert.True(t, ok)
-
-	broker.Opts.ExchangeOpts.Opts = Opts{OptAutoDelete: true}
-	broker.Opts.QueueOpts.Opts = Opts{OptAutoDelete: true}
+	b.Opts.ExchangeOpts.Opts = Opts{OptAutoDelete: true}
+	b.Opts.QueueOpts.Opts = Opts{OptAutoDelete: true}
 
 	topic := "test"
-	broker.subscriber = broker.initSubscriber(topic)
+	b.subscriber = b.initSubscriber(topic)
 
-	_, err := broker.subscriber.consume()
-
-	assert.Nil(t, err)
+	_, err := b.subscriber.consume()
 
 	assert.Nil(t, err)
-	broker.Opts.ConsumeOpts.Args = amqp.Table{"test": int(3)}
 
-	_, err = broker.subscriber.consume()
+	assert.Nil(t, err)
+	b.Opts.ConsumeOpts.Args = amqp.Table{"test": int(3)}
+
+	_, err = b.subscriber.consume()
 	assert.NotNil(t, err)
 }
