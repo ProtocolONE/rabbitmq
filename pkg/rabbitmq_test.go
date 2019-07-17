@@ -10,29 +10,32 @@ import (
 func TestRabbitMq_ReConnect_Error(t *testing.T) {
 	b, _ := NewBroker(defaultAmqpUrl)
 
+	broker, ok := b.(*Broker)
+	assert.True(t, ok)
+
 	tp1 := time.NewTimer(time.Second * 1)
 	tp2 := time.NewTimer(time.Second * 2)
 	tpEx := time.NewTimer(time.Second * 3)
 	exit := make(chan bool, 1)
 
-	b.rabbitMQ.amqpUrl = ""
+	broker.rabbitMQ.amqpUrl = ""
 
 	notifyClose := make(chan *amqp.Error)
-	b.rabbitMQ.conn.NotifyClose(notifyClose)
+	broker.rabbitMQ.conn.NotifyClose(notifyClose)
 
 	go func() {
 		notifyClose <- &amqp.Error{Code: 111, Reason: "Test"}
-		assert.False(t, b.rabbitMQ.connected)
+		assert.False(t, broker.rabbitMQ.connected)
 	}()
 
 	for {
 		select {
 		case <-tp1.C:
-			b.rabbitMQ.amqpUrl = defaultAmqpUrl
+			broker.rabbitMQ.amqpUrl = defaultAmqpUrl
 		case <-tp2.C:
-			assert.True(t, b.rabbitMQ.connected)
+			assert.True(t, broker.rabbitMQ.connected)
 		case <-tpEx.C:
-			b.rabbitMQ.close <- true
+			broker.rabbitMQ.close <- true
 			exit <- true
 		case <-exit:
 			return

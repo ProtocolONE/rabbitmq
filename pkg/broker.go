@@ -12,6 +12,15 @@ import (
 	"syscall"
 )
 
+type BrokerInterface interface {
+	newRabbitMq() *rabbitMq
+	init()
+
+	RegisterSubscriber(string, interface{}) error
+	Subscribe(chan bool) error
+	Publish(string, proto.Message, amqp.Table) error
+}
+
 type Broker struct {
 	address  string
 	rabbitMQ *rabbitMq
@@ -58,12 +67,12 @@ type PublishOpts struct {
 	Opts Opts
 }
 
-func NewBroker(address string) (b *Broker, err error) {
-	b = &Broker{address: address}
+func NewBroker(address string) (BrokerInterface, error) {
+	b := &Broker{address: address}
 	b.init()
 
 	rmq := b.newRabbitMq()
-	err = rmq.connect()
+	err := rmq.connect()
 
 	if err != nil {
 		return b, fmt.Errorf("[*] RabbitMq connection failed with error: %s", err)
@@ -71,7 +80,7 @@ func NewBroker(address string) (b *Broker, err error) {
 
 	b.rabbitMQ = rmq
 
-	return
+	return b, err
 }
 
 func (b *Broker) init() {
