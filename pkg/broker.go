@@ -16,6 +16,7 @@ type BrokerInterface interface {
 	RegisterSubscriber(string, interface{}) error
 	Subscribe(chan bool) error
 	Publish(string, proto.Message, amqp.Table) error
+	SetExchangeName(string)
 }
 
 type Broker struct {
@@ -102,6 +103,10 @@ func (b *Broker) init() {
 		},
 		PublishOpts: &PublishOpts{Opts: defaultPublishOpts},
 	}
+}
+
+func (b *Broker) SetExchangeName(name string) {
+	b.Opts.ExchangeOpts.Name = name
 }
 
 func (b *Broker) RegisterSubscriber(topic string, fn interface{}) error {
