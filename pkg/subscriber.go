@@ -90,7 +90,7 @@ func (s *subscriber) Subscribe() (err error) {
 				if s.opts.ConsumeOpts.Opts[OptAutoAck] == false {
 					_ = msg.Nack(false, false)
 				}
-				log.Println("[*] Unknown message type, message skipped ")
+				log.Printf("[*] Unknown message type, message skipped. Message: %s \n", string(msg.Body))
 				continue
 			}
 
