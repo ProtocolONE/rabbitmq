@@ -14,6 +14,8 @@ const (
 	defaultExchangeKind = "topic"
 	defaultQueueBindKey = "*"
 	defaultContentType  = "application/protobuf"
+
+	BrokerMessageRetryCountHeader = "x-retry-count"
 )
 
 type handler struct {
@@ -98,6 +100,14 @@ func (s *subscriber) Subscribe() (err error) {
 
 			if err := returnValues[0].Interface(); err != nil {
 				if s.opts.ConsumeOpts.Opts[OptAutoAck] == false {
+					if val, ok := msg.Headers[BrokerMessageRetryCountHeader]; ok {
+						valTyped, ok := val.(int32)
+
+						if ok {
+							msg.Headers[BrokerMessageRetryCountHeader] = valTyped + 1
+						}
+					}
+
 					_ = msg.Nack(false, false)
 				}
 			} else {
