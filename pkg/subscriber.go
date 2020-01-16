@@ -1,7 +1,9 @@
 package rabbitmq
 
 import (
+	"bytes"
 	"errors"
+	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
 	"github.com/streadway/amqp"
 	"log"
@@ -13,7 +15,8 @@ import (
 const (
 	defaultExchangeKind = "topic"
 	defaultQueueBindKey = "*"
-	defaultContentType  = "application/protobuf"
+	protobufContentType = "application/protobuf"
+	jsonContentType     = "application/json"
 
 	BrokerMessageRetryCountHeader = "x-retry-count"
 )
@@ -76,7 +79,7 @@ func (s *subscriber) Subscribe() (err error) {
 	}
 
 	fn := func(msg amqp.Delivery) {
-		if msg.ContentType != defaultContentType {
+		if msg.ContentType != protobufContentType && msg.ContentType != jsonContentType {
 			if s.opts.ConsumeOpts.Opts[OptAutoAck] == false {
 				_ = msg.Nack(false, false)
 			}
@@ -86,7 +89,15 @@ func (s *subscriber) Subscribe() (err error) {
 
 		for _, h := range s.handlers {
 			st := reflect.New(h.reqEl).Interface().(proto.Message)
-			err = proto.Unmarshal(msg.Body, st)
+
+			if msg.ContentType == protobufContentType {
+
+				err = proto.Unmarshal(msg.Body, st)
+
+			} else if msg.ContentType == jsonContentType {
+
+				err = jsonpb.Unmarshal(bytes.NewReader(msg.Body), st)
+			}
 
 			if err != nil {
 				if s.opts.ConsumeOpts.Opts[OptAutoAck] == false {
