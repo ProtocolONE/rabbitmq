@@ -195,8 +195,8 @@ func (b *Broker) Publish(topic string, msg proto.Message, h amqp.Table) (err err
 	}
 
 	m := amqp.Publishing{
-		ContentType: defaultContentType,
-		Headers: h,
+		ContentType: protobufContentType,
+		Headers:     h,
 	}
 
 	m.Body, err = proto.Marshal(msg)
