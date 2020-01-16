@@ -21,10 +21,6 @@ const (
 	BrokerMessageRetryCountHeader = "x-retry-count"
 )
 
-var (
-	supportedContentTypes = []string{protobufContentType, jsonContentType}
-)
-
 type handler struct {
 	method reflect.Value
 	reqEl  reflect.Type
@@ -47,15 +43,6 @@ type subscriber struct {
 	}
 
 	ext map[string]bool
-}
-
-func contains(s []string, e string) bool {
-	for _, a := range s {
-		if a == e {
-			return true
-		}
-	}
-	return false
 }
 
 func (b *Broker) initSubscriber(topic string) (subs *subscriber) {
@@ -92,7 +79,7 @@ func (s *subscriber) Subscribe() (err error) {
 	}
 
 	fn := func(msg amqp.Delivery) {
-		if !contains(supportedContentTypes, msg.ContentType) {
+		if msg.ContentType != protobufContentType && msg.ContentType != jsonContentType {
 			if s.opts.ConsumeOpts.Opts[OptAutoAck] == false {
 				_ = msg.Nack(false, false)
 			}
@@ -103,16 +90,13 @@ func (s *subscriber) Subscribe() (err error) {
 		for _, h := range s.handlers {
 			st := reflect.New(h.reqEl).Interface().(proto.Message)
 
-			switch msg.ContentType {
-			case protobufContentType:
+			if msg.ContentType == protobufContentType {
+
 				err = proto.Unmarshal(msg.Body, st)
-				break
 
-			case jsonContentType:
-				r := bytes.NewReader(msg.Body)
-				err = jsonpb.Unmarshal(r, st)
-				break
+			} else if msg.ContentType == jsonContentType {
 
+				err = jsonpb.Unmarshal(bytes.NewReader(msg.Body), st)
 			}
 
 			if err != nil {
