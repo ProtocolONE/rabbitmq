@@ -3,7 +3,7 @@ package rabbitmq
 import (
 	"errors"
 	"fmt"
-	"github.com/gogo/protobuf/proto"
+	"github.com/golang/protobuf/proto"
 	"github.com/streadway/amqp"
 	"os"
 	"os/signal"
