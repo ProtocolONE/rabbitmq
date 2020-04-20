@@ -44,6 +44,11 @@ func (_m *BrokerInterface) SetExchangeName(_a0 string) {
 	_m.Called(_a0)
 }
 
+// SetQueueOptsArgs provides a mock function with given fields: args
+func (_m *BrokerInterface) SetQueueOptsArgs(args amqp.Table) {
+	_m.Called(args)
+}
+
 // Subscribe provides a mock function with given fields: _a0
 func (_m *BrokerInterface) Subscribe(_a0 chan bool) error {
 	ret := _m.Called(_a0)
