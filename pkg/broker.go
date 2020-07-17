@@ -1,6 +1,7 @@
 package rabbitmq
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/golang/protobuf/proto"
@@ -9,6 +10,7 @@ import (
 	"os/signal"
 	"reflect"
 	"runtime"
+	"strconv"
 	"syscall"
 )
 
@@ -16,6 +18,8 @@ type BrokerInterface interface {
 	RegisterSubscriber(string, interface{}) error
 	Subscribe(chan bool) error
 	Publish(string, proto.Message, amqp.Table) error
+	PublishProto(string, proto.Message, amqp.Table, int64) error
+	PublishJson(string, interface{}, amqp.Table, int64) error
 	SetExchangeName(string)
 	SetQueueOptsArgs(args amqp.Table)
 }
@@ -191,6 +195,29 @@ func (b *Broker) Subscribe(exit chan bool) (err error) {
 }
 
 func (b *Broker) Publish(topic string, msg proto.Message, h amqp.Table) (err error) {
+	return b.publish(topic, protobufContentType, msg, h, 0)
+}
+
+func (b *Broker) PublishProto(topic string, msg proto.Message, h amqp.Table, expiration int64) (err error) {
+	return b.publish(topic, protobufContentType, msg, h, expiration)
+}
+
+func (b *Broker) PublishJson(topic string, msg interface{}, h amqp.Table, expiration int64) (err error) {
+	return b.publish(topic, jsonContentType, msg, h, expiration)
+}
+
+func (b *Broker) getExpiration(expiration int64) string {
+	if expiration == 0 {
+		return ""
+	}
+	return strconv.Itoa(int(expiration))
+}
+
+func (b *Broker) publish(topic, contentType string, msg interface{}, h amqp.Table, expiration int64) (err error) {
+	if msg == nil {
+		return errors.New("message is nil")
+	}
+
 	if b.publisher == nil {
 		b.publisher = b.newPublisher(topic)
 	}
@@ -200,11 +227,28 @@ func (b *Broker) Publish(topic string, msg proto.Message, h amqp.Table) (err err
 	}
 
 	m := amqp.Publishing{
-		ContentType: protobufContentType,
+		ContentType: contentType,
 		Headers:     h,
 	}
 
-	m.Body, err = proto.Marshal(msg)
+	exp := b.getExpiration(expiration)
+	if exp != "" {
+		m.Expiration = exp
+	}
+
+	switch contentType {
+	case protobufContentType:
+		m.Body, err = proto.Marshal(msg.(proto.Message))
+		break
+
+	case jsonContentType:
+		m.Body, err = json.Marshal(msg)
+		break
+
+	default:
+		err = errors.New("contentType is not supported: " + contentType)
+		break
+	}
 
 	if err != nil {
 		return
