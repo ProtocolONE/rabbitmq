@@ -298,13 +298,33 @@ func TestBroker_Publish(t *testing.T) {
 	assert.NotNil(t, broker.publisher)
 }
 
+func TestBroker_PublishJson(t *testing.T) {
+	b, _ := NewBroker(defaultAmqpUrl)
+
+	broker, ok := b.(*Broker)
+	assert.True(t, ok)
+
+	broker.Opts.ExchangeOpts.Opts = Opts{OptAutoDelete: true}
+	broker.Opts.QueueOpts.Opts = Opts{OptAutoDelete: true}
+
+	assert.Nil(t, broker.publisher)
+
+	topic := "test.publisher"
+	one := &test.One{Value: topic}
+
+	err := b.PublishJson(topic, one, nil, 1000)
+
+	assert.Nil(t, err)
+	assert.NotNil(t, broker.publisher)
+}
+
 func TestBroker_Publish_MarshalFail(t *testing.T) {
 	b, _ := NewBroker(defaultAmqpUrl)
 	topic := "test.publisher"
 
 	err := b.Publish(topic, nil, nil)
 	assert.NotNil(t, err)
-	assert.Regexp(t, "Marshal", err.Error())
+	assert.Equal(t, "message is nil", err.Error())
 }
 
 func TestBroker_Subscribe(t *testing.T) {
