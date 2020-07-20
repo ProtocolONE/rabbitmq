@@ -103,7 +103,7 @@ func (s *subscriber) Subscribe() (err error) {
 				if s.opts.ConsumeOpts.Opts[OptAutoAck] == false {
 					_ = msg.Nack(false, false)
 				}
-				log.Printf("[*] Unknown message type, message skipped. Message: %s \n", string(msg.Body))
+				log.Printf("[*] Cannot unmarshal message, message skipped. \n Error: %s \n Message: %s \n", err.Error(), string(msg.Body))
 				continue
 			}
 
