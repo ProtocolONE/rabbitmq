@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	defaultAmqpUrl = "amqp://127.0.0.1:5672"
+	defaultAmqpUrl = "amqp://rabbitmq:rabbitmq@127.0.0.1:5672"
 )
 
 type TestStruct struct{}
@@ -200,13 +200,12 @@ func TestBroker_RegisterSubscriber_HandlerIncorrectFirstArgTypes(t *testing.T) {
 	}
 
 	err = b.RegisterSubscriber("test", fn2)
-	assert.Error(t, err)
-	assert.Equal(t, "first arguments for all handlers must have equal types", err.Error())
+	assert.NoError(t, err)
 
 	broker, ok := b.(*Broker)
 	assert.True(t, ok)
 
-	assert.Len(t, broker.subscriber.handlers, 1)
+	assert.Len(t, broker.subscriber.handlers, 2)
 }
 
 func TestBroker_RegisterSubscriber_HandlerMoreOneHandlersCorrect(t *testing.T) {
@@ -267,7 +266,6 @@ func TestBroker_InitSubscriber(t *testing.T) {
 	sub := broker.initSubscriber(topic)
 
 	assert.Equal(t, broker.rabbitMQ, sub.rabbit)
-	assert.Equal(t, topic, sub.topic)
 	assert.Len(t, sub.handlers, 0)
 	assert.Len(t, sub.ext, 0)
 

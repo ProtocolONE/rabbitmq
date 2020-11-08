@@ -24,10 +24,10 @@ const (
 type handler struct {
 	method reflect.Value
 	reqEl  reflect.Type
+	topic  string
 }
 
 type subscriber struct {
-	topic    string
 	handlers []*handler
 	fn       func(msg amqp.Delivery)
 
@@ -47,7 +47,6 @@ type subscriber struct {
 
 func (b *Broker) initSubscriber(topic string) (subs *subscriber) {
 	subs = &subscriber{
-		topic:    topic,
 		rabbit:   b.rabbitMQ,
 		handlers: []*handler{},
 		ext:      make(map[string]bool),
@@ -87,6 +86,8 @@ func (s *subscriber) Subscribe() (err error) {
 			return
 		}
 
+		var handlerExists = false
+
 		for _, h := range s.handlers {
 			st := reflect.New(h.reqEl).Interface().(proto.Message)
 
@@ -104,6 +105,12 @@ func (s *subscriber) Subscribe() (err error) {
 					_ = msg.Nack(false, false)
 				}
 				log.Printf("[*] Cannot unmarshal message, message skipped. \n Error: %s \n Message: %s \n", err.Error(), string(msg.Body))
+				continue
+			}
+
+			if msg.RoutingKey == h.topic {
+				handlerExists = true
+			} else {
 				continue
 			}
 
@@ -125,6 +132,13 @@ func (s *subscriber) Subscribe() (err error) {
 				if s.opts.ConsumeOpts.Opts[OptAutoAck] == false {
 					_ = msg.Ack(false)
 				}
+			}
+		}
+
+		if !handlerExists {
+			log.Printf("[*] Unable to find handler for the routing key %s. Message skipped. \n Message: %s \n", msg.RoutingKey, string(msg.Body))
+			if s.opts.ConsumeOpts.Opts[OptAutoAck] == false {
+				_ = msg.Reject(false)
 			}
 		}
 	}
