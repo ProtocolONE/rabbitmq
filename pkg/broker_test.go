@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	defaultAmqpUrl = "amqp://rabbitmq:rabbitmq@127.0.0.1:5672"
+	defaultAmqpUrl = "amqp://127.0.0.1:5672"
 )
 
 type TestStruct struct{}
