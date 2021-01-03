@@ -89,6 +89,12 @@ func (s *subscriber) Subscribe() (err error) {
 		var handlerExists = false
 
 		for _, h := range s.handlers {
+			if msg.RoutingKey == h.topic {
+				handlerExists = true
+			} else {
+				continue
+			}
+
 			st := reflect.New(h.reqEl).Interface().(proto.Message)
 
 			if msg.ContentType == protobufContentType {
@@ -105,12 +111,6 @@ func (s *subscriber) Subscribe() (err error) {
 					_ = msg.Nack(false, false)
 				}
 				log.Printf("[*] Cannot unmarshal message, message skipped. \n Error: %s \n Message: %s \n", err.Error(), string(msg.Body))
-				continue
-			}
-
-			if msg.RoutingKey == h.topic {
-				handlerExists = true
-			} else {
 				continue
 			}
 
