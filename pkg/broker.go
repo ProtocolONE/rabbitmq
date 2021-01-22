@@ -165,13 +165,7 @@ func (b *Broker) RegisterSubscriber(topic string, fn interface{}) error {
 		return errors.New("handler func must have outcome argument")
 	}
 
-	if len(b.subscriber.handlers) > 0 {
-		if b.subscriber.handlers[0].reqEl != reqType.Elem() {
-			return errors.New("first arguments for all handlers must have equal types")
-		}
-	}
-
-	h := &handler{method: refFn, reqEl: reqType.Elem()}
+	h := &handler{method: refFn, reqEl: reqType.Elem(), topic: topic}
 	b.subscriber.handlers = append(b.subscriber.handlers, h)
 
 	b.subscriber.ext[key] = true
