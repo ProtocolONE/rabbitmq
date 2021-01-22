@@ -3,6 +3,7 @@ package rabbitmq
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
 	"github.com/streadway/amqp"
@@ -91,18 +92,24 @@ func (s *subscriber) Subscribe() (err error) {
 		for _, h := range s.handlers {
 			if msg.RoutingKey == h.topic {
 				handlerExists = true
-			} else {
+			} else if deathHeaders, ok := msg.Headers[HeaderXDeath]; ok && msg.RoutingKey == defaultQueueBindKey {
+				routingKey := s.getFirstRoutingKeyFromDeathLetter(deathHeaders)
+
+				if routingKey == h.topic {
+					msg.RoutingKey = routingKey
+					handlerExists = true
+				}
+			}
+
+			if !handlerExists {
 				continue
 			}
 
 			st := reflect.New(h.reqEl).Interface().(proto.Message)
 
 			if msg.ContentType == protobufContentType {
-
 				err = proto.Unmarshal(msg.Body, st)
-
 			} else if msg.ContentType == jsonContentType {
-
 				err = jsonpb.Unmarshal(bytes.NewReader(msg.Body), st)
 			}
 
@@ -111,7 +118,7 @@ func (s *subscriber) Subscribe() (err error) {
 					_ = msg.Nack(false, false)
 				}
 				log.Printf("[*] Cannot unmarshal message, message skipped. \n Error: %s \n Message: %s \n", err.Error(), string(msg.Body))
-				continue
+				break
 			}
 
 			returnValues := h.method.Call([]reflect.Value{reflect.ValueOf(st), reflect.ValueOf(msg)})
@@ -133,6 +140,8 @@ func (s *subscriber) Subscribe() (err error) {
 					_ = msg.Ack(false)
 				}
 			}
+
+			break
 		}
 
 		if !handlerExists {
@@ -241,4 +250,23 @@ func (s *subscriber) consume() (dls <-chan amqp.Delivery, err error) {
 	}
 
 	return
+}
+
+func (s *subscriber) getFirstRoutingKeyFromDeathLetter(deathHeaders interface{}) string {
+	if len(deathHeaders.([]interface{})) < 1 {
+		return ""
+	}
+
+	deathHeader := deathHeaders.([]interface{})[0]
+	routingKeys, ok := deathHeader.(amqp.Table)[HeaderRoutingKeys]
+
+	if !ok {
+		return ""
+	}
+
+	if len(routingKeys.([]interface{})) < 1 {
+		return ""
+	}
+
+	return fmt.Sprint(routingKeys.([]interface{})[0])
 }
