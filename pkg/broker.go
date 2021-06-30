@@ -22,6 +22,7 @@ type BrokerInterface interface {
 	PublishJson(string, interface{}, amqp.Table, int64) error
 	SetExchangeName(string)
 	SetQueueOptsArgs(args amqp.Table)
+	Ping() error
 }
 
 type Broker struct {
@@ -255,4 +256,12 @@ func (b *Broker) publish(topic, contentType string, msg interface{}, h amqp.Tabl
 	}
 
 	return b.publisher.publish(topic, m)
+}
+
+func (b *Broker) Ping() error {
+	if !b.rabbitMQ.connected {
+		return errors.New("rabbitmq service is disconnected")
+	}
+
+	return nil
 }
