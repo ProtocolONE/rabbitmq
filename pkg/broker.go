@@ -23,11 +23,13 @@ type BrokerInterface interface {
 	SetExchangeName(string)
 	SetQueueOptsArgs(args amqp.Table)
 	Ping() error
+	SetAutoCreateQueue(bool)
 }
 
 type Broker struct {
-	address  string
-	rabbitMQ *rabbitMq
+	address         string
+	autoCreateQueue bool
+	rabbitMQ        *rabbitMq
 
 	subscriber *subscriber
 	publisher  *publisher
@@ -264,4 +266,8 @@ func (b *Broker) Ping() error {
 	}
 
 	return nil
+}
+
+func (b *Broker) SetAutoCreateQueue(val bool) {
+	b.autoCreateQueue = val
 }
