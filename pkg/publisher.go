@@ -12,11 +12,11 @@ type publisher struct {
 		*ConsumeOpts
 		*PublishOpts
 	}
-	autoCreateQueue bool
+	suppressAutoCreateQueue bool
 }
 
 func (b *Broker) newPublisher(topic string) (pub *publisher) {
-	pub = &publisher{rabbit: b.rabbitMQ, autoCreateQueue: b.autoCreateQueue}
+	pub = &publisher{rabbit: b.rabbitMQ, suppressAutoCreateQueue: b.suppressAutoCreateQueue}
 
 	pub.opts.PublishOpts = b.Opts.PublishOpts
 	pub.opts.ExchangeOpts = b.Opts.ExchangeOpts
@@ -25,7 +25,7 @@ func (b *Broker) newPublisher(topic string) (pub *publisher) {
 		pub.opts.ExchangeOpts.Name = topic
 	}
 
-	if pub.autoCreateQueue {
+	if !pub.suppressAutoCreateQueue {
 		pub.opts.QueueOpts = b.Opts.QueueOpts
 		pub.opts.QueueBindOpts = b.Opts.QueueBindOpts
 		pub.opts.ConsumeOpts = b.Opts.ConsumeOpts
@@ -50,7 +50,7 @@ func (p *publisher) publish(topic string, msg amqp.Publishing) (err error) {
 		return
 	}
 
-	if p.autoCreateQueue {
+	if !p.suppressAutoCreateQueue {
 		err = p.rabbit.DeclareQueue(p.opts.QueueOpts.Name, p.opts.QueueOpts.Opts, p.opts.QueueOpts.Args)
 
 		if err != nil {

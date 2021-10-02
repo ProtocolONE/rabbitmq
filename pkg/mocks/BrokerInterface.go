@@ -84,11 +84,6 @@ func (_m *BrokerInterface) RegisterSubscriber(_a0 string, _a1 interface{}) error
 	return r0
 }
 
-// SetAutoCreateQueue provides a mock function with given fields: _a0
-func (_m *BrokerInterface) SetAutoCreateQueue(_a0 bool) {
-	_m.Called(_a0)
-}
-
 // SetExchangeName provides a mock function with given fields: _a0
 func (_m *BrokerInterface) SetExchangeName(_a0 string) {
 	_m.Called(_a0)
@@ -111,4 +106,9 @@ func (_m *BrokerInterface) Subscribe(_a0 chan bool) error {
 	}
 
 	return r0
+}
+
+// SuppressAutoCreateQueue provides a mock function with given fields: _a0
+func (_m *BrokerInterface) SuppressAutoCreateQueue(_a0 bool) {
+	_m.Called(_a0)
 }
