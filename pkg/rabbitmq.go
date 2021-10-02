@@ -18,6 +18,9 @@ const (
 	OptImmediate  = "immediate"
 	OptInternal   = "internal"
 
+	HeaderXDeath      = "x-death"
+	HeaderRoutingKeys = "routing-keys"
+
 	errorNicConnection = "connection not open"
 	errorNilChannel    = "channel not open"
 )
