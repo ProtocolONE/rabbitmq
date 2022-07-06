@@ -4,15 +4,18 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/golang/protobuf/proto"
-	"github.com/streadway/amqp"
 	"os"
 	"os/signal"
 	"reflect"
 	"runtime"
 	"strconv"
 	"syscall"
+
+	"github.com/golang/protobuf/proto"
+	"github.com/streadway/amqp"
 )
+
+var _ BrokerInterface = (*Broker)(nil)
 
 type BrokerInterface interface {
 	RegisterSubscriber(string, interface{}) error
@@ -24,6 +27,7 @@ type BrokerInterface interface {
 	SetQueueOptsArgs(args amqp.Table)
 	Ping() error
 	SuppressAutoCreateQueue(bool)
+	Close() error
 }
 
 type Broker struct {
@@ -270,4 +274,8 @@ func (b *Broker) Ping() error {
 
 func (b *Broker) SuppressAutoCreateQueue(val bool) {
 	b.suppressAutoCreateQueue = val
+}
+
+func (b *Broker) Close() error {
+	return b.rabbitMQ.conn.Close()
 }

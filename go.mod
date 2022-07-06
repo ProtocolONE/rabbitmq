@@ -6,6 +6,7 @@ require (
 	github.com/google/uuid v1.1.0
 	github.com/streadway/amqp v0.0.0-20181205114330-a314942b2fd9
 	github.com/stretchr/testify v1.3.0
+	golang.org/x/sync v0.0.0-20220601150217-0de741cfad7f // indirect
 )
 
 go 1.13
